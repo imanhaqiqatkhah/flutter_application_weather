@@ -14,21 +14,62 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
+  TextEditingController textEditingController = TextEditingController();
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        appBar: AppBar(),
+        appBar: AppBar(
+          backgroundColor: Colors.black,
+          elevation: 20,
+          actions: <Widget>[
+            PopupMenuButton<String>(itemBuilder: (BuildContext context) {
+              return {
+                'Setting',
+                'Sign up',
+                'Login',
+              }.map((String Choice) {
+                return PopupMenuItem(value: Choice, child: Text(Choice));
+              }).toList();
+            })
+          ],
+          title: Text(
+            "Weather App",
+            style: TextStyle(color: Colors.white),
+          ),
+        ),
         body: Container(
           decoration: BoxDecoration(
               image: DecorationImage(
                   fit: BoxFit.cover,
                   image: AssetImage('assets/images/pic_bg.jpeg'))),
           child: BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: 0.2, sigmaY: 0.5),
+            filter: ImageFilter.blur(sigmaX: 0.2, sigmaY: 2),
             child: Center(
               child: Column(children: [
                 Padding(
-                  padding: const EdgeInsets.only(top: 50),
+                  padding: const EdgeInsets.all(10),
+                  child: Row(
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.only(right: 15),
+                        child: ElevatedButton(
+                            onPressed: () {}, child: Text("Find")),
+                      ),
+                      Expanded(
+                          child: TextField(
+                        controller: textEditingController,
+                        decoration: InputDecoration(
+                          hintText: "Enter Your City Name: ",
+                          hintStyle: TextStyle(
+                              color: const Color.fromARGB(255, 144, 144, 144)),
+                          border: UnderlineInputBorder(),
+                        ),
+                      ))
+                    ],
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.only(top: 30),
                   child: Text(
                     "Shushtar View",
                     style: TextStyle(color: Colors.white, fontSize: 35),
@@ -38,7 +79,9 @@ class _MyAppState extends State<MyApp> {
                   padding: const EdgeInsets.only(top: 30),
                   child: Text(
                     "Clear Sky",
-                    style: TextStyle(color: Colors.grey, fontSize: 20),
+                    style: TextStyle(
+                        color: const Color.fromARGB(255, 200, 200, 200),
+                        fontSize: 20),
                   ),
                 ),
                 Padding(
@@ -123,6 +166,7 @@ class _MyAppState extends State<MyApp> {
                             height: 50,
                             width: 65,
                             child: Card(
+                              elevation: 0,
                               color: Colors.transparent,
                               child: Column(
                                 children: [
@@ -138,7 +182,9 @@ class _MyAppState extends State<MyApp> {
                                   Text(
                                     "39" + "\u00b0",
                                     style: TextStyle(
-                                        color: Colors.grey, fontSize: 20),
+                                        color: const Color.fromARGB(
+                                            255, 221, 220, 220),
+                                        fontSize: 20),
                                   ),
                                 ],
                               ),
