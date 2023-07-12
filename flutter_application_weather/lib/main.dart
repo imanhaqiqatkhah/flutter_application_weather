@@ -2,6 +2,7 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:dio/dio.dart';
+import 'package:flutter_application_weather/Model/CurrentCityDataModel.dart';
 
 void main() {
   runApp(const MaterialApp(debugShowCheckedModeBanner: false, home: MyApp()));
@@ -300,12 +301,28 @@ class _MyAppState extends State<MyApp> {
   }
 
   void SendRequestCurrentWeather() async {
-    var apikey = '2dffefc69817de8ce363303e42d55cec';
-    var cityname = "ahwaz";
+    var apikey = '0eac226b502e5b5907f0b9aef90d22ff';
+    var cityname = "tehran";
     var response = await Dio().get(
         "https://api.openweathermap.org/data/2.5/weather",
         queryParameters: {'q': cityname, 'appid': apikey, 'units': 'metric'});
     print(response.data);
     print(response.statusCode);
+    var datamodel = CurrentCityDataModel(
+        response.data["name"],
+        response.data["coord"]["lon"],
+        response.data["coord"]["lat"],
+        response.data["weather"][0]["main"],
+        response.data["weather"][0]["description"],
+        response.data["main"]["temp"],
+        response.data["main"]["temp_min"],
+        response.data["main"]["temp_max"],
+        response.data["main"]["pressure"],
+        response.data["main"]["humidity"],
+        response.data["wind"]["speed"],
+        response.data["dt"],
+        response.data["sys"]["country"],
+        response.data["sys"]["sunrise"],
+        response.data["sys"]["sunset"]);
   }
 }
