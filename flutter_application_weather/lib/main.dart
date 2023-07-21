@@ -23,7 +23,7 @@ class _MyAppState extends State<MyApp> {
   late Future<CurrentCityDataModel> currentweatherFuture;
   late StreamController<List<ForecastDaysModel>> StreamForecastdays;
 
-  var cityname = "tehran";
+  var cityname = "shushtar";
   var lon;
   var lat;
 
@@ -64,6 +64,7 @@ class _MyAppState extends State<MyApp> {
           builder: (context, snapshot) {
             if (snapshot.hasData) {
               CurrentCityDataModel? cityDataModel = snapshot.data;
+              SendRequest7DaysForecast(lat, lon);
 
               final formatter = DateFormat.jm();
               var sunrise = formatter.format(
@@ -91,7 +92,14 @@ class _MyAppState extends State<MyApp> {
                             Padding(
                               padding: const EdgeInsets.only(right: 15),
                               child: ElevatedButton(
-                                  onPressed: () {}, child: Text("Find")),
+                                  onPressed: () {
+                                    setState(() {
+                                      currentweatherFuture =
+                                          SendRequestCurrentWeather(
+                                              textEditingController.text);
+                                    });
+                                  },
+                                  child: Text("Find")),
                             ),
                             Expanded(
                                 child: TextField(
@@ -103,6 +111,7 @@ class _MyAppState extends State<MyApp> {
                                         255, 144, 144, 144)),
                                 border: UnderlineInputBorder(),
                               ),
+                              style: TextStyle(color: Colors.white),
                             ))
                           ],
                         ),
@@ -110,7 +119,7 @@ class _MyAppState extends State<MyApp> {
                       Padding(
                         padding: const EdgeInsets.only(top: 20),
                         child: Text(
-                          cityDataModel!.cityname,
+                          cityDataModel.cityname,
                           style: TextStyle(color: Colors.white, fontSize: 35),
                         ),
                       ),
@@ -124,11 +133,11 @@ class _MyAppState extends State<MyApp> {
                         ),
                       ),
                       Padding(
-                        padding: const EdgeInsets.only(top: 20),
+                        padding: const EdgeInsets.only(top: 15),
                         child: setIconForMain(cityDataModel),
                       ),
                       Padding(
-                        padding: const EdgeInsets.only(top: 20),
+                        padding: const EdgeInsets.only(top: 15),
                         child: Text(cityDataModel.temp.toString() + "\u00b0",
                             style:
                                 TextStyle(color: Colors.white, fontSize: 70)),
@@ -187,7 +196,7 @@ class _MyAppState extends State<MyApp> {
                         ),
                       ),
                       Padding(
-                        padding: const EdgeInsets.only(top: 15, bottom: 10),
+                        padding: const EdgeInsets.only(top: 10, bottom: 5),
                         child: Container(
                           color: Color.fromARGB(255, 65, 65, 65),
                           height: 1,
@@ -196,46 +205,38 @@ class _MyAppState extends State<MyApp> {
                       ),
                       Container(
                         width: double.infinity,
-                        height: 85,
+                        height: 100,
                         child: Center(
-                          child: ListView.builder(
-                              shrinkWrap: true,
-                              scrollDirection: Axis.horizontal,
-                              itemCount: 6,
-                              itemBuilder: (BuildContext context, int pos) {
-                                return Container(
-                                  height: 50,
-                                  width: 65,
-                                  child: Card(
-                                    elevation: 0,
-                                    color: Colors.transparent,
-                                    child: Column(
-                                      children: [
-                                        Text(
-                                          "Fri,8pm",
-                                          style: TextStyle(
-                                              color: Colors.grey, fontSize: 15),
-                                        ),
-                                        Icon(
-                                          Icons.cloud,
-                                          color: Colors.white,
-                                        ),
-                                        Text(
-                                          "39" + "\u00b0",
-                                          style: TextStyle(
-                                              color: const Color.fromARGB(
-                                                  255, 221, 220, 220),
-                                              fontSize: 20),
-                                        ),
-                                      ],
-                                    ),
+                          child: StreamBuilder<List<ForecastDaysModel>>(
+                            stream: StreamForecastdays.stream,
+                            builder: (context, snapshot) {
+                              if (snapshot.hasData) {
+                                List<ForecastDaysModel>? forecastdays =
+                                    snapshot.data;
+                                return ListView.builder(
+                                    shrinkWrap: true,
+                                    scrollDirection: Axis.horizontal,
+                                    itemCount: 6,
+                                    itemBuilder:
+                                        (BuildContext context, int pos) {
+                                      return listViewItems(
+                                          forecastdays![pos + 1]);
+                                    });
+                              } else {
+                                return Center(
+                                  child: JumpingDotsProgressIndicator(
+                                    color: Colors.black,
+                                    fontSize: 50,
+                                    dotSpacing: 2,
                                   ),
                                 );
-                              }),
+                              }
+                            },
+                          ),
                         ),
                       ),
                       Padding(
-                        padding: const EdgeInsets.only(bottom: 15),
+                        padding: const EdgeInsets.only(top: 15),
                         child: Container(
                           color: Color.fromARGB(255, 67, 67, 67),
                           height: 1,
@@ -243,7 +244,7 @@ class _MyAppState extends State<MyApp> {
                         ),
                       ),
                       Padding(
-                        padding: const EdgeInsets.only(top: 5),
+                        padding: const EdgeInsets.only(top: 15),
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
@@ -353,6 +354,32 @@ class _MyAppState extends State<MyApp> {
         ));
   }
 
+  Container listViewItems(ForecastDaysModel forecastday) {
+    return Container(
+      height: 50,
+      width: 70,
+      child: Card(
+        elevation: 0,
+        color: Colors.transparent,
+        child: Column(
+          children: [
+            Text(
+              forecastday.dataTime,
+              style: TextStyle(color: Colors.grey, fontSize: 15),
+            ),
+            Expanded(child: setIconForMain(forecastday)),
+            Text(
+              forecastday.temp.round().toString() + "\u00b0",
+              style: TextStyle(
+                  color: const Color.fromARGB(255, 221, 220, 220),
+                  fontSize: 20),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Image setIconForMain(model) {
     String description = model.description;
 
@@ -388,8 +415,6 @@ class _MyAppState extends State<MyApp> {
     lat = response.data["coord"]["lat"];
     lon = response.data["coord"]["lon"];
 
-    print(response.data);
-    print(response.statusCode);
     var datamodel = CurrentCityDataModel(
         response.data["name"],
         response.data["coord"]["lon"],
@@ -411,34 +436,40 @@ class _MyAppState extends State<MyApp> {
 
   void SendRequest7DaysForecast(lat, lon) async {
     List<ForecastDaysModel> list = [];
-    var apiKey = '9cc31ad12a1f875e6ed3db44f5e45dd3';
+    var apiKey = '0eac226b502e5b5907f0b9aef90d22ff';
 
-    var response = await Dio().get(
-        "https://api.openweathermap.org/data/3.0/onecall",
-        queryParameters: {
-          'lat': lat,
-          'lon': lon,
-          'exclude': 'minutely,hourly',
-          'appid': apiKey,
-          'units': 'metric'
-        });
+    try {
+      var response = await Dio().get(
+          "https://api.openweathermap.org/data/3.0/onecall?",
+          queryParameters: {
+            'lat': lat,
+            'lon': lon,
+            'exclude': 'minutely,hourly',
+            'appid': apiKey,
+            'units': 'metric'
+          });
 
-    final formatter = DateFormat.MMMd();
-    for (int i = 0; i < 8; i++) {
-      var model = response.data['daily'][i];
-      var dt = formatter.format(new DateTime.fromMillisecondsSinceEpoch(
-          model['dt'] * 1000,
-          isUtc: true));
+      final formatter = DateFormat.MMMd();
+      for (int i = 0; i < 8; i++) {
+        var model = response.data['daily'][i];
+        var dt = formatter.format(new DateTime.fromMillisecondsSinceEpoch(
+            model['dt'] * 1000,
+            isUtc: true));
 
-      ForecastDaysModel forecastDaysModel = ForecastDaysModel(
-        dt,
-        model['temp']['day'],
-        model['weather'][0]['main'],
-        model['weather'][0]['description'],
-      );
-      list.add(forecastDaysModel);
+        ForecastDaysModel forecastDaysModel = ForecastDaysModel(
+            dt,
+            model['temp']['day'],
+            model['weather'][0]['main'],
+            model['weather'][0]['description']);
+        list.add(forecastDaysModel);
+      }
+
+      StreamForecastdays.add(list);
+    } on DioError catch (e) {
+      print(e.response!.statusCode);
+      print(e.message);
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text("there is an Error")));
     }
-
-    StreamForecastdays.add(list);
   }
 }
